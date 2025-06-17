@@ -1,0 +1,44 @@
+name: Deploy Documentation to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on tags like v1.0, v2.3.4
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Build documentation
+        run: |
+          mkdir -p public
+          cd docs
+          find . -name "*.md" | while read -r mdfile; do
+            # Remove the leading './' from find output
+            clean_mdfile=$(echo "$mdfile" | sed 's|^./||')
+            # Create the corresponding HTML file path
+            htmlfile="../public/$(echo "$clean_mdfile" | sed 's|\\.md$|.html|')"
+            # Create the directory for the HTML file if it doesn't exist
+            mkdir -p "$(dirname "$htmlfile")"
+            # Convert Markdown to HTML using Pandoc
+            pandoc "$clean_mdfile" -s -o "$htmlfile"
+          done
+          cd ..
+      
+      - name: Add .nojekyll file
+        run: touch public/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          # The user_name and user_email are used for the commit author
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com' 

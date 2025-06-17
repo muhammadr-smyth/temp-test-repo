@@ -36,6 +36,9 @@ jobs:
       - name: Add .nojekyll file
         run: touch public/.nojekyll
 
+      - name: Debug: List files in public directory
+        run: ls -R public
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
